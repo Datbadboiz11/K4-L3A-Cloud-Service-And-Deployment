@@ -10,17 +10,17 @@
 
 | Mục | Nội dung |
 |-----|----------|
-| Họ và tên | (điền họ tên) |
-| Mã học viên | (điền mã học viên) |
-| Repo | (điền link repo K4-L3A-DAY12-HoVaTen-MSSV-CloudServicesAndDeployment) |
+| Họ và tên | Thân Tiến Đạt |
+| Mã học viên | 2A202603023 |
+| Repo | https://github.com/Datbadboiz11/K4-L3A-ThanTienDat-2A202603023-Cloud-Service-And-Deployment |
 
 ## Service
 
 | Mục | Nội dung |
 |-----|----------|
-| Public URL | https://TODO-thay-bang-url-that.up.railway.app |
-| Platform | Railway / Render / Cloud Run — (điền platform bạn dùng) |
-| Ngày deploy | (điền ngày) |
+| Public URL | https://k4-l3a-thantiendat-2a202603023-cloud-service-and-production.up.railway.app |
+| Platform | Railway |
+| Ngày deploy | 2026-09-28 |
 
 ## Biến Môi Trường Đã Set Trên Cloud
 
@@ -30,7 +30,7 @@ Ghi tên biến và **nguồn giá trị**, không ghi giá trị:
 |------|--------|---------|
 | `PORT` | ✅ | platform tự gán |
 | `AGENT_API_KEY` | ✅ | đặt trong dashboard, không nằm trong repo |
-| `REDIS_URL` | ✅ | (điền: Redis add-on của platform / Upstash / ...) |
+| `REDIS_URL` | ✅ | Redis add-on của Railway |
 | `RATE_LIMIT_PER_MINUTE` | ✅ | 10 |
 | `MONTHLY_BUDGET_USD` | ✅ | 10.0 |
 | `LOG_LEVEL` | ✅ | INFO |
@@ -72,8 +72,39 @@ done; echo
 
 Dán output của các lệnh trên vào đây:
 
-```
-(điền output)
+```bash
+# 1. Liveness
+curl -i https://k4-l3a-thantiendat-2a202603023-cloud-service-and-production.up.railway.app/health
+HTTP/2 200
+content-type: application/json
+{"status":"ok","service":"day12-agent","version":"1.0.0"}
+
+# 2. Readiness
+curl -i https://k4-l3a-thantiendat-2a202603023-cloud-service-and-production.up.railway.app/ready
+HTTP/2 200
+content-type: application/json
+{"status":"ready","redis":true}
+
+# 3. Không có API key
+curl -i -X POST https://k4-l3a-thantiendat-2a202603023-cloud-service-and-production.up.railway.app/ask \
+  -H "Content-Type: application/json" \
+  -d '{"question":"Hello"}'
+HTTP/2 401
+content-type: application/json
+{"detail":"invalid or missing API key"}
+
+# 4. Có API key
+curl -i -X POST https://k4-l3a-thantiendat-2a202603023-cloud-service-and-production.up.railway.app/ask \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: $AGENT_API_KEY" \
+  -H "X-User-Id: sv-test" \
+  -d '{"question":"Deploy là gì?"}'
+HTTP/2 200
+content-type: application/json
+{"answer":"Theo mình hiểu, Deploy là gì? liên quan tới cách hệ thống được đóng gói và vận hành...","user_id":"sv-test","history_length":2,"cost_usd":0.000039,"tokens":{"in":51,"out":53}}
+
+# 5. Rate limit — gọi 15 lần
+200 200 200 200 200 200 200 200 200 200 429 429 429 429 429
 ```
 
 ## Ảnh Chụp Màn Hình
@@ -82,20 +113,3 @@ Dán output của các lệnh trên vào đây:
 
 - `screenshots/dashboard.png` — trang quản lý service trên platform
 - `screenshots/health.png` — kết quả gọi `/health` từ trình duyệt hoặc curl
-
----
-
-## Nếu Dùng Phương Án Dự Phòng
-
-Không đăng ký được tài khoản cloud? Vẫn nộp được bài, nhưng CP5 tối đa 60% điểm:
-
-1. Đặt `LOCAL_FALLBACK=true` trong `.env`
-2. Chạy `docker compose up -d` rồi kiểm tra `docker compose ps`
-3. Chụp màn hình vào `screenshots/`
-4. Chạy `pytest tests/test_cp5.py -v` — bộ test sẽ tự chuyển sang kiểm tra
-   `http://localhost:8000`
-5. Ghi rõ lý do không deploy được vào phần dưới đây:
-
-```
-(điền lý do nếu dùng phương án dự phòng, ngược lại xóa mục này)
-```
